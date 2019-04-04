@@ -51,8 +51,16 @@ def check_file(dirname,file):
 		
 
 def walk_files(arg, dirname, names):
+	# 不扫描Pods中的文件
+	if dirname.endswith("/Pods") or ("/Pods/" in dirname):
+		return;
+	# 不扫描framework中的文件
+	if dirname.endswith(".framework") or (".framework/" in dirname):
+		return;
 	for file in names:
+		# if file.startswith("TC"): //过滤前缀
 		check_file(dirname,file)
+			
 	
 	
 
@@ -69,7 +77,7 @@ def check(dir):
 		print "\n====== here is the unused files ======\n"
 		for file_key in temp_h_files:
 			if temp_h_files[file_key]["import_times"]<=0 and temp_h_files[file_key]["file_path"]!=NO_PATH:
-				print "  {key}".format(key=file_key)
+				print "file:  {key} \npath: {dir}".format(key=file_key,dir=temp_h_files[file_key]["file_path"])
 				
 		print "\n---------complete---------\n"
 	finally:
