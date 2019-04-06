@@ -3,12 +3,9 @@
 
 import sys,os,re
 
-# 文件未被其它文件引用
-# 文件被引用，但没有调用
-# 定义了类，但没有调用
-
 temp_h_files =  {}
 NO_PATH = "NO_PATH"
+FILTER_CLASS_PRE	= ""  #扫描的文件前缀
 
 def check_file(dirname,file):
 	file_path = ("%s/%s"%(dirname,file))
@@ -58,8 +55,11 @@ def walk_files(arg, dirname, names):
 	if dirname.endswith(".framework") or (".framework/" in dirname):
 		return;
 	for file in names:
-		# if file.startswith("TC"): //过滤前缀
-		check_file(dirname,file)
+		if FILTER_CLASS_PRE:
+			if file.startswith(FILTER_CLASS_PRE): # 文件前缀过滤
+				check_file(dirname,file)
+		else:
+			check_file(dirname,file)
 			
 	
 	
@@ -74,26 +74,37 @@ def check(dir):
 		print 'change to dir:',os.getcwd()
 		print "---------begin-------\n"
 		os.path.walk(dir, walk_files, "walking")
-		print "\n====== here is the unused files ======\n"
+
+		header = "\n====== here is the unused files ======\n"
+		print header
+		
+		f = open("unused_files_report.txt","w")
+		f.write(header)
+		count = 0
 		for file_key in temp_h_files:
 			if temp_h_files[file_key]["import_times"]<=0 and temp_h_files[file_key]["file_path"]!=NO_PATH:
-				print "file:  {key} \npath: {dir}".format(key=file_key,dir=temp_h_files[file_key]["file_path"])
-				
-		print "\n---------complete---------\n"
+				# report_file =  "file:  {key} \npath: {dir}".format(key=file_key,dir=temp_h_files[file_key]["file_path"])
+				report_file =  "file:  {key}".format(key=file_key)
+				print report_file
+				f.write(report_file+'\n')
+				count = count+1
+		print "\n---------complete(total count:{num})---------\n".format(num=count)
+		f.write("\nTotal count:{num}\n".format(num=count))
+		f.close()
+		
 	finally:
 		pass
 	
 
 def main(argv):
-	dir = argv[0]
+	dir = ''
 	if len(argv) > 1:
-		print "usage: python check_unused_classes.py <your-project-directory>"
+		print "usage: python unused_files.py <your-project-directory>"
 		sys.exit()
 	elif len(argv) <= 0:
 		dir = '.'
-	# 	print "check in current directory。"
-	# else:
-	# 	print 'check in directory:',dir
+	else:
+		dir = argv[0]
 
 	check(dir)
 
